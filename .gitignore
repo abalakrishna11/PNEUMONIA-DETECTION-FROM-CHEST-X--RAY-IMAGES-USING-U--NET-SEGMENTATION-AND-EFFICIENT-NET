@@ -1,0 +1,7 @@
+.env
+__pycache__/
+uploads/
+reports/
+models/*.keras
+models/*.h5
+models/pneumoai_saved_model/

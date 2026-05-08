@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PneumoAI — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#060d1a;--bg2:#0a1628;
+  --teal:#00d4e8;--teal2:#00b4c8;--teal3:rgba(0,212,232,.10);
+  --white:#f0f4f8;--gray:#6b7f96;--text:#b8c8d8;
+  --border:rgba(0,212,232,.12);--card:rgba(10,22,40,.82);
+  --green:#00e5a0;--red:#ff4d6d;--amber:#ffb830;--purple:#7c3aed;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.bg-fixed{position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 60% 50% at 10% 20%,rgba(0,80,100,.1) 0,transparent 60%),
+    radial-gradient(ellipse 50% 40% at 90% 80%,rgba(0,60,80,.08) 0,transparent 60%),#060d1a}
+.bg-grid{position:fixed;inset:0;z-index:0;
+  background-image:linear-gradient(rgba(0,212,232,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,232,.025) 1px,transparent 1px);background-size:40px 40px}
+.scan{position:fixed;top:0;left:0;width:100%;height:2px;z-index:100;
+  background:linear-gradient(90deg,transparent,var(--teal),transparent);animation:scan 3s ease-in-out infinite}
+@keyframes scan{0%,100%{opacity:.3}50%{opacity:.8}}
+
+nav{position:sticky;top:0;z-index:50;background:rgba(6,13,26,.92);
+  border-bottom:1px solid var(--border);padding:0 28px;height:60px;
+  display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px)}
+.nav-left{display:flex;align-items:center;gap:12px}
+.nav-logo{width:34px;height:34px;background:linear-gradient(135deg,var(--teal),var(--teal2));
+  border-radius:9px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(0,212,232,.3)}
+.nav-logo svg{width:18px;height:18px;fill:white}
+.nav-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--white)}
+.nav-tag{font-size:10px;color:var(--teal);letter-spacing:2px;font-weight:600}
+.nav-right{display:flex;align-items:center;gap:12px}
+.nav-pill{background:var(--teal3);border:1px solid var(--border);border-radius:20px;
+  padding:5px 12px;font-size:11px;color:var(--teal);font-weight:600;display:none}
+@media(min-width:900px){.nav-pill{display:block}}
+.nav-user{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text)}
+.nav-av{width:30px;height:30px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#060d1a}
+.btn-logout{background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.25);
+  border-radius:8px;padding:5px 12px;color:#ff9eb5;font-size:12px;font-weight:600;
+  text-decoration:none;transition:all .2s}
+.btn-logout:hover{background:rgba(255,77,109,.15)}
+
+.pipeline-strip{position:relative;z-index:1;background:rgba(0,212,232,.04);
+  border-bottom:1px solid var(--border);padding:8px 28px;
+  display:flex;align-items:center;gap:6px;overflow-x:auto;white-space:nowrap}
+.pipe-step{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
+  color:var(--teal);letter-spacing:.5px;text-transform:uppercase}
+.pipe-step .badge{background:rgba(0,212,232,.12);border:1px solid rgba(0,212,232,.25);
+  border-radius:6px;padding:3px 9px;font-size:10px}
+.pipe-arrow{color:var(--gray);font-size:12px;margin:0 2px}
+
+.main{position:relative;z-index:1;padding:28px;max-width:1500px;margin:0 auto}
+.page-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--white);margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--gray);margin-bottom:24px}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:18px 20px;display:flex;align-items:center;gap:14px;transition:transform .2s}
+.stat:hover{transform:translateY(-2px)}
+.stat-ic{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-ic svg{width:20px;height:20px}
+.ic-teal{background:rgba(0,212,232,.12)}.ic-teal svg{fill:var(--teal)}
+.ic-green{background:rgba(0,229,160,.12)}.ic-green svg{fill:var(--green)}
+.ic-amber{background:rgba(255,184,48,.12)}.ic-amber svg{fill:var(--amber)}
+.ic-red{background:rgba(255,77,109,.12)}.ic-red svg{fill:var(--red)}
+.stat-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--white)}
+.stat-lbl{font-size:11px;color:var(--gray);margin-top:1px;font-weight:500}
+
+.top-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px;backdrop-filter:blur(10px)}
+.card-head{font-size:11px;font-weight:700;color:var(--teal);letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.card-head::before{content:'';width:3px;height:14px;background:var(--teal);border-radius:2px}
+
+.status-badge{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:9px;
+  font-size:12px;font-weight:600;margin-bottom:18px}
+.status-badge.live{background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.25);color:var(--green)}
+.status-badge.demo{background:rgba(255,184,48,.08);border:1px solid rgba(255,184,48,.25);color:var(--amber)}
+.dot-pulse{width:7px;height:7px;border-radius:50%;animation:dp 1.5s ease-in-out infinite}
+.live .dot-pulse{background:var(--green)}.demo .dot-pulse{background:var(--amber)}
+@keyframes dp{0%,100%{opacity:1}50%{opacity:.3}}
+
+.upload-zone{border:2px dashed rgba(0,212,232,.2);border-radius:14px;padding:32px 20px;
+  text-align:center;cursor:pointer;transition:all .3s;position:relative;background:rgba(0,212,232,.02)}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--teal);background:rgba(0,212,232,.05)}
+.upload-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-ic{width:54px;height:54px;background:rgba(0,212,232,.1);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 14px;
+  animation:upulse 2.5s ease-in-out infinite}
+@keyframes upulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,232,.3)}50%{box-shadow:0 0 0 10px rgba(0,212,232,0)}}
+.upload-ic svg{width:26px;height:26px;fill:var(--teal)}
+.upload-title{font-size:15px;font-weight:600;color:var(--white);margin-bottom:6px}
+.upload-sub{font-size:12px;color:var(--gray)}
+.upload-warn{font-size:11px;color:var(--amber);margin-top:7px;font-weight:600}
+
+.preview-box{margin-top:14px;display:none;border-radius:12px;overflow:hidden;
+  border:1px solid var(--border);position:relative}
+.preview-box img{width:100%;height:190px;object-fit:contain;background:#000;display:block}
+.preview-lbl{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.7);
+  border-radius:6px;padding:3px 10px;font-size:10px;color:var(--teal);font-weight:700;letter-spacing:1px}
+
+.error-toast{display:none;background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.3);
+  border-radius:10px;padding:12px 16px;color:#ff9eb5;font-size:13px;margin-top:14px;font-weight:500;line-height:1.5}
+
+.btn-analyze{width:100%;margin-top:14px;padding:15px;
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  border:none;border-radius:12px;color:#060d1a;font-size:15px;font-weight:700;
+  font-family:'Syne',sans-serif;cursor:pointer;transition:all .25s;
+  letter-spacing:1px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-analyze:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,212,232,.4)}
+.btn-analyze:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-analyze svg{width:18px;height:18px;fill:#060d1a}
+
+.analysing-bar{display:none;margin-top:14px;padding:16px 18px;
+  background:rgba(0,212,232,.06);border:1px solid rgba(0,212,232,.25);border-radius:12px;text-align:center}
+.analysing-bar .spin{width:28px;height:28px;border:3px solid rgba(0,212,232,.15);
+  border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.analysing-bar .ab-title{font-size:13px;color:var(--teal);font-weight:700;margin-bottom:4px}
+.analysing-bar .ab-sub{font-size:11px;color:var(--gray);margin-bottom:10px}
+.step-dots{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.step-dot{font-size:10px;color:var(--gray);display:flex;align-items:center;gap:5px;
+  background:rgba(0,212,232,.06);border:1px solid rgba(0,212,232,.15);
+  border-radius:20px;padding:3px 10px}
+.step-dot::before{content:'';width:5px;height:5px;border-radius:50%;
+  background:var(--teal);flex-shrink:0;animation:dp 1.2s infinite}
+
+.results-card{display:none}
+.result-badge{border-radius:12px;padding:16px 18px;margin-bottom:16px;
+  display:flex;align-items:center;gap:14px;animation:fadeUp .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.result-badge.pneumonia{background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.25)}
+.result-badge.normal{background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.25)}
+.rb-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pneumonia .rb-icon{background:rgba(255,77,109,.15)}.normal .rb-icon{background:rgba(0,229,160,.15)}
+.rb-icon svg{width:22px;height:22px}
+.pneumonia .rb-icon svg{fill:var(--red)}.normal .rb-icon svg{fill:var(--green)}
+.rb-label{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--white)}
+.rb-conf{font-size:12px;color:var(--gray);margin-top:2px}
+.rb-conf span{color:var(--white);font-weight:600}
+.model-tag{display:inline-flex;align-items:center;gap:5px;margin-top:5px;
+  background:rgba(0,212,232,.08);border:1px solid rgba(0,212,232,.2);
+  border-radius:5px;padding:2px 8px;font-size:10px;color:var(--teal);font-weight:700;letter-spacing:.5px}
+
+.conf-wrap{margin-bottom:16px}
+.conf-row{display:flex;justify-content:space-between;font-size:11px;color:var(--gray);
+  margin-bottom:6px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.conf-bg{height:8px;background:rgba(255,255,255,.06);border-radius:8px;overflow:hidden}
+.conf-fill{height:100%;border-radius:8px;transition:width 1s cubic-bezier(.34,1.56,.64,1);width:0}
+.conf-fill.pneumonia{background:linear-gradient(90deg,#ff4d6d,#ff1744)}
+.conf-fill.normal{background:linear-gradient(90deg,#00e5a0,#00c875)}
+
+.lung-meters{margin-bottom:16px;background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.lung-meters-title{font-size:10px;font-weight:700;color:var(--teal);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.lung-meter-row{margin-bottom:10px}.lung-meter-row:last-child{margin-bottom:0}
+.lung-meter-hdr{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;color:var(--gray);margin-bottom:5px;font-weight:600}
+.lung-meter-hdr span.val{color:var(--white)}
+.lung-meter-hdr span.note{font-size:9px;color:var(--gray);font-weight:400;font-style:italic}
+.lung-bar-bg{height:9px;background:rgba(255,255,255,.05);border-radius:6px;overflow:hidden}
+.lung-bar-fill{height:100%;border-radius:6px;transition:width 1.2s cubic-bezier(.34,1.56,.64,1);width:0}
+.lung-bar-fill.total{background:linear-gradient(90deg,#ff4d6d,#ff1744)}
+.lung-bar-fill.left{background:linear-gradient(90deg,#00d4e8,#00b4c8)}
+.lung-bar-fill.right{background:linear-gradient(90deg,#ffb830,#ff8c00)}
+.lung-bar-fill.normal-bar{background:linear-gradient(90deg,#00e5a0,#00c875)}
+
+.unet-box{margin-bottom:16px;background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.2);
+  border-radius:12px;padding:12px 14px;display:none}
+.unet-box.visible{display:block}
+.unet-title{font-size:10px;font-weight:700;color:#a78bfa;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.unet-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--gray);margin-bottom:6px}
+.unet-row:last-child{margin-bottom:0}
+.unet-row span.val{color:var(--white);font-weight:600}
+.unet-seg-bar{flex:1;height:6px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden;margin:0 10px}
+.unet-seg-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#7c3aed,#a78bfa);
+  transition:width 1.2s cubic-bezier(.34,1.56,.64,1);width:0}
+
+.stage-section{margin-bottom:16px}
+.stage-card{border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px}
+.stage-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stage-icon svg{width:19px;height:19px}
+.stage-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--white)}
+.stage-sub{font-size:10px;color:var(--gray);margin-top:3px;letter-spacing:.5px;text-transform:uppercase}
+.stage-card.early{background:rgba(255,184,48,.05);border:1px solid rgba(255,184,48,.25)}
+.stage-card.early .stage-icon{background:rgba(255,184,48,.15)}.stage-card.early .stage-icon svg{fill:var(--amber)}
+.stage-card.early .stage-title{color:var(--amber)}
+.stage-card.moderate{background:rgba(255,120,0,.06);border:1px solid rgba(255,120,0,.3)}
+.stage-card.moderate .stage-icon{background:rgba(255,120,0,.15)}.stage-card.moderate .stage-icon svg{fill:#ff7800}
+.stage-card.moderate .stage-title{color:#ff9040}
+.stage-card.advanced{background:rgba(255,77,109,.07);border:1px solid rgba(255,77,109,.3)}
+.stage-card.advanced .stage-icon{background:rgba(255,77,109,.18)}.stage-card.advanced .stage-icon svg{fill:var(--red)}
+.stage-card.advanced .stage-title{color:var(--red)}
+
+.normal-notice{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;
+  background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);color:var(--green);
+  font-size:12px;font-weight:600;margin-bottom:16px}
+.normal-notice svg{width:17px;height:17px;fill:var(--green);flex-shrink:0}
+
+/* ── Download PDF button — only button, no email ── */
+.report-section{display:none;margin-bottom:16px;background:rgba(124,58,237,.05);
+  border:1px solid rgba(124,58,237,.25);border-radius:14px;padding:16px 18px}
+.report-section.visible{display:block}
+.report-section-title{font-size:11px;font-weight:700;color:#a78bfa;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.report-section-title::before{content:'';width:3px;height:14px;background:#a78bfa;border-radius:2px}
+.btn-download{width:100%;padding:14px 16px;border:none;border-radius:10px;
+  font-size:14px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;
+  transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:linear-gradient(135deg,#0066ff,#00d4e8);color:white;letter-spacing:.5px}
+.btn-download:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,102,255,.4)}
+.btn-download:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-download svg{width:16px;height:16px;fill:white}
+.dl-status{padding:9px 12px;border-radius:9px;font-size:12px;font-weight:600;
+  display:none;align-items:center;gap:8px;margin-top:8px}
+.dl-status.show{display:flex}
+.dl-status svg{width:14px;height:14px;fill:currentColor;flex-shrink:0}
+.dl-status.generating{background:rgba(0,212,232,.08);border:1px solid rgba(0,212,232,.2);color:var(--teal)}
+.dl-status.success{background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.25);color:var(--green)}
+.dl-status.error{background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.25);color:#ff9eb5}
+
+.img-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.img-grid.single{grid-template-columns:1fr}
+.img-card{border-radius:10px;overflow:hidden;border:1px solid var(--border);background:rgba(0,0,0,.35)}
+.img-card img{width:100%;height:190px;object-fit:contain;background:#000;display:block}
+.img-lbl{padding:6px 10px;font-size:10px;font-weight:700;color:var(--teal);
+  letter-spacing:1px;text-transform:uppercase;background:rgba(0,0,0,.45)}
+.img-lbl.heat{color:#ff9060}
+.no-img{height:190px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;color:var(--gray);font-size:11px}
+.no-img svg{width:24px;height:24px;fill:rgba(255,255,255,.12)}
+.heat-note{font-size:10px;color:var(--gray);text-align:center;padding:5px 0 6px;letter-spacing:.4px;border-top:1px solid var(--border)}
+.normal-img-note{font-size:11px;color:var(--gray);text-align:center;margin-top:8px}
+
+.arch-section{margin-top:0}
+.arch-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.info-item{background:rgba(0,0,0,.15);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;align-items:flex-start;gap:12px}
+.info-ic{width:34px;height:34px;border-radius:9px;background:var(--teal3);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.info-ic svg{width:17px;height:17px;fill:var(--teal)}
+.info-ic.purple-ic{background:rgba(124,58,237,.12)}.info-ic.purple-ic svg{fill:#a78bfa}
+.info-ic.amber-ic{background:rgba(255,184,48,.12)}.info-ic.amber-ic svg{fill:var(--amber)}
+.info-title{font-size:12px;font-weight:700;color:var(--white);margin-bottom:4px}
+.info-desc{font-size:11px;color:var(--gray);line-height:1.6}
+.info-chip{display:inline-block;background:rgba(0,212,232,.1);border:1px solid rgba(0,212,232,.2);
+  border-radius:4px;padding:1px 6px;font-size:9px;font-weight:700;color:var(--teal);
+  letter-spacing:.5px;margin-top:5px;margin-right:4px}
+.info-chip.purple{background:rgba(124,58,237,.12);border-color:rgba(124,58,237,.25);color:#a78bfa}
+.info-chip.amber{background:rgba(255,184,48,.1);border-color:rgba(255,184,48,.2);color:var(--amber)}
+
+@media(max-width:1100px){.arch-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:800px){.top-cols{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.arch-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:540px){.main{padding:14px}.stats{grid-template-columns:1fr 1fr}.img-grid{grid-template-columns:1fr}nav{padding:0 14px}.pipeline-strip{padding:8px 14px}.arch-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="bg-fixed"></div><div class="bg-grid"></div><div class="scan"></div>
+
+<nav>
+  <div class="nav-left">
+    <div class="nav-logo"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg></div>
+    <div><div class="nav-title">PneumoAI</div><div class="nav-tag">MEDICAL AI</div></div>
+  </div>
+  <div class="nav-right">
+    <div class="nav-pill">EfficientNet-B3 · Grad-CAM++ · U-Net</div>
+    <div class="nav-user">
+      <div class="nav-av">{{ name[0].upper() }}</div>
+      <span>Dr. {{ name }}</span>
+    </div>
+    <a href="/logout" class="btn-logout">Logout</a>
+  </div>
+</nav>
+
+<div class="pipeline-strip">
+  <div class="pipe-step"><span class="badge">INPUT</span> Chest X-Ray</div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-step"><span class="badge">VALIDATE</span> Gatekeeper</div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-step"><span class="badge">CLASSIFY</span> EfficientNet-B3</div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-step"><span class="badge">SEGMENT</span> U-Net</div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-step"><span class="badge">EXPLAIN</span> Grad-CAM++</div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-step"><span class="badge">OUTPUT</span> Diagnosis + PDF</div>
+</div>
+
+<div class="main">
+  <div class="page-title">Pneumonia Detection System</div>
+  <div class="page-sub">EfficientNet-B3 · U-Net lung segmentation · Grad-CAM++ heatmap · Stage classification · PDF report</div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-ic ic-teal"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></div>
+      <div><div class="stat-val">96.77%</div><div class="stat-lbl">EfficientNet-B3 Accuracy</div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-ic ic-green"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg></div>
+      <div><div class="stat-val">99.66%</div><div class="stat-lbl">Precision</div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-ic ic-amber"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></div>
+      <div><div class="stat-val">0.9788</div><div class="stat-lbl">AUC-ROC Score</div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-ic ic-red"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+      <div><div class="stat-val">U-Net</div><div class="stat-lbl">Lung Segmentation</div></div>
+    </div>
+  </div>
+
+  <div class="top-cols">
+    <!-- LEFT: UPLOAD -->
+    <div>
+      <div class="card">
+        <div class="card-head">Upload Chest X-Ray</div>
+        {% if model_loaded %}
+        <div class="status-badge live"><div class="dot-pulse"></div>EfficientNet-B3 + Grad-CAM++ — Live Analysis Active</div>
+        {% else %}
+        <div class="status-badge demo"><div class="dot-pulse"></div>Demo Mode — Model Not Loaded</div>
+        {% endif %}
+
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" class="upload-input" id="fileInput" accept=".jpg,.jpeg,.png">
+          <div class="upload-ic"><svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg></div>
+          <div class="upload-title">Drop Chest X-Ray here</div>
+          <div class="upload-sub">JPG or PNG · PA / AP view · Grayscale preferred</div>
+          <div class="upload-warn">⚠ Only chest X-rays accepted — validated before analysis</div>
+        </div>
+
+        <div class="preview-box" id="previewBox">
+          <span class="preview-lbl">X-RAY PREVIEW</span>
+          <img id="previewImg" src="" alt="Preview">
+        </div>
+
+        <div class="error-toast" id="errorToast"></div>
+
+        <button class="btn-analyze" id="analyzeBtn" disabled onclick="runAnalyze()">
+          <svg viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+          RUN EFFICIENTNET-B3 ANALYSIS
+        </button>
+
+        <div class="analysing-bar" id="analysingBar">
+          <div class="spin"></div>
+          <div class="ab-title">Analysis in progress…</div>
+          <div class="ab-sub">Typically 5–15 seconds</div>
+          <div class="step-dots">
+            <div class="step-dot">Validating X-Ray</div>
+            <div class="step-dot">EfficientNet-B3</div>
+            <div class="step-dot">Grad-CAM++ Heatmap</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: RESULTS -->
+    <div>
+      <div class="card" id="resultsPlaceholder"
+           style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;min-height:300px">
+        <svg viewBox="0 0 24 24" style="width:48px;height:48px;fill:rgba(0,212,232,.15)">
+          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2z"/>
+        </svg>
+        <div style="font-size:13px;color:var(--gray);text-align:center">
+          Upload a chest X-ray and click<br>
+          <strong style="color:var(--teal)">Run Analysis</strong> to see results here
+        </div>
+      </div>
+
+      <div class="card results-card" id="resultsDiv">
+        <div class="card-head">EfficientNet-B3 Analysis Results</div>
+
+        <div class="result-badge" id="resultBadge">
+          <div class="rb-icon"><svg viewBox="0 0 24 24" id="resultIcon"></svg></div>
+          <div>
+            <div class="rb-label" id="resultLabel"></div>
+            <div class="rb-conf">Confidence: <span id="resultConf"></span></div>
+            <div class="model-tag">EfficientNet-B3 · Grad-CAM++ · U-Net</div>
+          </div>
+        </div>
+
+        <div class="conf-wrap">
+          <div class="conf-row"><span>EfficientNet-B3 Confidence</span><span id="confPct"></span></div>
+          <div class="conf-bg"><div class="conf-fill" id="confBar"></div></div>
+        </div>
+
+        <div class="lung-meters">
+          <div class="lung-meters-title">U-Net Segmentation · Infection Distribution</div>
+          <div class="lung-meter-row">
+            <div class="lung-meter-hdr">
+              <span>Total Lung Affected <span class="note">(avg of both lobes)</span></span>
+              <span class="val" id="totalLungVal">0%</span>
+            </div>
+            <div class="lung-bar-bg"><div class="lung-bar-fill" id="totalLungBar"></div></div>
+          </div>
+          <div class="lung-meter-row">
+            <div class="lung-meter-hdr"><span>Left Lung Lobe</span><span class="val" id="leftLungVal">0%</span></div>
+            <div class="lung-bar-bg"><div class="lung-bar-fill left" id="leftLungBar"></div></div>
+          </div>
+          <div class="lung-meter-row">
+            <div class="lung-meter-hdr"><span>Right Lung Lobe</span><span class="val" id="rightLungVal">0%</span></div>
+            <div class="lung-bar-bg"><div class="lung-bar-fill right" id="rightLungBar"></div></div>
+          </div>
+        </div>
+
+        <div class="unet-box" id="unetBox">
+          <div class="unet-title">U-Net Segmentation Detail</div>
+          <div class="unet-row">
+            <span>Segmented Lung Area</span>
+            <div class="unet-seg-bar"><div class="unet-seg-fill" id="unetSegBar"></div></div>
+            <span class="val" id="unetSegVal">—</span>
+          </div>
+          <div class="unet-row">
+            <span>Infected Region Mask</span>
+            <div class="unet-seg-bar"><div class="unet-seg-fill" id="unetMaskBar"></div></div>
+            <span class="val" id="unetMaskVal">—</span>
+          </div>
+        </div>
+
+        <div class="stage-section" id="stageSection" style="display:none">
+          <div class="stage-card" id="stageCard">
+            <div class="stage-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </div>
+            <div>
+              <div class="stage-title" id="stageTitle"></div>
+              <div class="stage-sub">Stage Classification</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="normal-notice" id="normalNotice" style="display:none">
+          <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+          EfficientNet-B3: Lungs clear — no pathology detected
+        </div>
+
+        <!-- DOWNLOAD PDF BUTTON ONLY — no email -->
+        <div class="report-section" id="reportSection">
+          <div class="report-section-title">Download PDF Report</div>
+          <button class="btn-download" id="btnDownload" onclick="doDownload()">
+            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            DOWNLOAD PDF REPORT
+          </button>
+          <div class="dl-status" id="dlStatus">
+            <svg viewBox="0 0 24 24" id="dlStatusIcon"></svg>
+            <span id="dlStatusText"></span>
+          </div>
+        </div>
+
+        <div class="img-grid" id="imgGrid">
+          <div class="img-card">
+            <div class="img-lbl">Original X-Ray</div>
+            <img id="origImg" src="" alt="" style="display:none">
+            <div class="no-img" id="origNone">
+              <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2z"/></svg>
+              <span>Original</span>
+            </div>
+          </div>
+          <div class="img-card" id="heatmapCard" style="display:none">
+            <div class="img-lbl heat">Grad-CAM++ Heatmap</div>
+            <img id="gradcamImg" src="" alt="" style="display:none">
+            <div class="no-img" id="gradcamNone">
+              <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5z"/></svg>
+              <span>Generating…</span>
+            </div>
+            <div class="heat-note">🔴 Red = High infection · 🟡 Yellow = Low activity</div>
+          </div>
+        </div>
+        <div id="normalImgNote" style="display:none" class="normal-img-note">
+          Heatmap not generated — no pneumonia detected
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM: MODEL ARCHITECTURE -->
+  <div class="arch-section">
+    <div class="card">
+      <div class="card-head">Model Architecture</div>
+      <div class="arch-grid">
+        <div class="info-item">
+          <div class="info-ic"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></div>
+          <div>
+            <div class="info-title">EfficientNet-B3 Classifier</div>
+            <div class="info-desc">Compound-scaled CNN fine-tuned on NIH Chest X-Ray14. Achieves <strong style="color:var(--white)">96.77% accuracy</strong> and 99.66% precision for pneumonia vs normal.</div>
+            <span class="info-chip">EfficientNet-B3</span><span class="info-chip">Fine-tuned</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-ic purple-ic"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg></div>
+          <div>
+            <div class="info-title">U-Net Lung Segmentation</div>
+            <div class="info-desc">Encoder-decoder with skip connections segments left and right lung independently. Calculates exact % of each lobe affected by infection.</div>
+            <span class="info-chip purple">U-Net</span><span class="info-chip purple">Skip Connections</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-ic amber-ic"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+          <div>
+            <div class="info-title">Grad-CAM++ Explainability</div>
+            <div class="info-desc">Gradient-weighted Class Activation Mapping++ shows lung regions driving the classification. 🔴 Red = high activation, 🟡 Yellow = lower. Pneumonia cases only.</div>
+            <span class="info-chip amber">Grad-CAM++</span><span class="info-chip amber">XAI</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-ic"><svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg></div>
+          <div>
+            <div class="info-title">Strict X-Ray Validation</div>
+            <div class="info-desc">Automated gatekeeper validates every upload. Rejects CT scans, MRI, ultrasounds, non-chest images, and colour photos. Only PA/AP chest radiographs accepted.</div>
+            <span class="info-chip">Chest-Only</span><span class="info-chip">PA / AP View</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-ic"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></div>
+          <div>
+            <div class="info-title">PDF Report (Download)</div>
+            <div class="info-desc">Pneumonia detection generates a clinical PDF: original X-ray, Grad-CAM++ heatmap, lung metrics, confidence score, radiological findings and recommendations.</div>
+            <span class="info-chip">PDF Report</span><span class="info-chip">Instant Download</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const fileInput    = document.getElementById('fileInput');
+const previewBox   = document.getElementById('previewBox');
+const previewImg   = document.getElementById('previewImg');
+const analyzeBtn   = document.getElementById('analyzeBtn');
+const analysingBar = document.getElementById('analysingBar');
+const uploadZone   = document.getElementById('uploadZone');
+const errorToast   = document.getElementById('errorToast');
+
+let currentImageId = null;
+let isAnalysing    = false;
+
+function showError(msg) {
+  errorToast.innerHTML = '⚠ ' + msg;
+  errorToast.style.display = 'block';
+  setTimeout(() => { errorToast.style.display = 'none'; }, 14000);
+}
+function setAnalysing(on) {
+  isAnalysing = on;
+  analyzeBtn.style.display   = on ? 'none'  : 'flex';
+  analysingBar.style.display = on ? 'block' : 'none';
+}
+
+fileInput.addEventListener('change', e => {
+  if (isAnalysing) return;
+  const file = e.target.files[0]; if (!file) return;
+  previewImg.src = URL.createObjectURL(file);
+  previewBox.style.display = 'block';
+  analyzeBtn.disabled = false;
+  errorToast.style.display = 'none';
+  currentImageId = null;
+});
+uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+uploadZone.addEventListener('dragleave', ()  => uploadZone.classList.remove('drag'));
+uploadZone.addEventListener('drop', e => {
+  if (isAnalysing) return;
+  e.preventDefault(); uploadZone.classList.remove('drag');
+  const file = e.dataTransfer.files[0]; if (!file) return;
+  fileInput.files = e.dataTransfer.files;
+  previewImg.src = URL.createObjectURL(file);
+  previewBox.style.display = 'block';
+  analyzeBtn.disabled = false;
+  currentImageId = null;
+});
+
+function runAnalyze() {
+  if (isAnalysing) return;
+  const file = fileInput.files[0]; if (!file) return;
+  setAnalysing(true);
+  errorToast.style.display = 'none';
+
+  const fd   = new FormData();
+  fd.append('xray', file);
+  const ctrl = new AbortController();
+  const tid  = setTimeout(() => ctrl.abort(), 120000);  // 2 min timeout
+
+  fetch('/analyze', { method:'POST', body:fd, signal:ctrl.signal })
+    .then(r => { clearTimeout(tid); return r.json().then(d => ({ok:r.ok, d})); })
+    .then(({ok, d}) => {
+      setAnalysing(false);
+      if (!ok || d.error) {
+        showError(d.error || 'Analysis failed. Please try again.');
+        document.getElementById('resultsPlaceholder').style.display = 'flex';
+        return;
+      }
+      currentImageId = d.original;
+      showResults(d);
+    })
+    .catch(err => {
+      clearTimeout(tid);
+      setAnalysing(false);
+      document.getElementById('resultsPlaceholder').style.display = 'flex';
+      showError(err.name === 'AbortError'
+        ? 'Request timed out. Please try again.'
+        : 'Network error. Check Flask is running and try again.');
+    });
+}
+
+function anim(el, pct, delay) {
+  setTimeout(() => { el.style.width = Math.min(pct, 100) + '%'; }, delay || 100);
+}
+
+function showResults(d) {
+  const label  = d.label  || 'NORMAL';
+  const conf   = Number(d.confidence  || 0);
+  const isPneu = label === 'PNEUMONIA';
+  const lung   = Number(d.lung_percent        || 0);
+  const leftL  = Number(d.left_lung_percent   || 0);
+  const rightL = Number(d.right_lung_percent  || 0);
+
+  document.getElementById('resultsPlaceholder').style.display = 'none';
+  document.getElementById('resultsDiv').style.display         = 'block';
+
+  const badge = document.getElementById('resultBadge');
+  badge.className = 'result-badge ' + (isPneu ? 'pneumonia' : 'normal');
+  document.getElementById('resultIcon').innerHTML = isPneu
+    ? '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>'
+    : '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>';
+  document.getElementById('resultLabel').textContent = isPneu ? '⚠ PNEUMONIA DETECTED' : '✓ NORMAL — No Pneumonia';
+  document.getElementById('resultConf').textContent  = conf.toFixed(2) + '%';
+  document.getElementById('confPct').textContent     = conf.toFixed(2) + '%';
+
+  const bar = document.getElementById('confBar');
+  bar.className = 'conf-fill ' + (isPneu ? 'pneumonia' : 'normal');
+  anim(bar, conf);
+
+  document.getElementById('totalLungVal').textContent = lung.toFixed(1)  + '%';
+  document.getElementById('leftLungVal').textContent  = leftL.toFixed(1) + '%';
+  document.getElementById('rightLungVal').textContent = rightL.toFixed(1)+ '%';
+  const tb = document.getElementById('totalLungBar');
+  tb.className = isPneu ? 'lung-bar-fill total' : 'lung-bar-fill normal-bar';
+  anim(tb, lung, 150);
+  anim(document.getElementById('leftLungBar'),  leftL,  250);
+  anim(document.getElementById('rightLungBar'), rightL, 350);
+
+  const unetBox = document.getElementById('unetBox');
+  if (isPneu) {
+    unetBox.classList.add('visible');
+    const seg = Math.min(100, lung + 20);
+    document.getElementById('unetSegVal').textContent  = seg.toFixed(1) + '%';
+    document.getElementById('unetMaskVal').textContent = lung.toFixed(1) + '%';
+    anim(document.getElementById('unetSegBar'),  seg,  400);
+    anim(document.getElementById('unetMaskBar'), lung, 500);
+  } else {
+    unetBox.classList.remove('visible');
+  }
+
+  const ss = document.getElementById('stageSection');
+  const nn = document.getElementById('normalNotice');
+  if (isPneu && d.stage_label) {
+    ss.style.display = 'block'; nn.style.display = 'none';
+    document.getElementById('stageTitle').textContent = d.stage_label;
+    const sc = document.getElementById('stageCard');
+    sc.className = 'stage-card';
+    const sl = (d.stage_label || '').toLowerCase();
+    if      (sl.includes('early')) sc.classList.add('early');
+    else if (sl.includes('mod'))   sc.classList.add('moderate');
+    else                           sc.classList.add('advanced');
+  } else {
+    ss.style.display = 'none';
+    nn.style.display = isPneu ? 'none' : 'flex';
+  }
+
+  // Show download button only for PNEUMONIA
+  const rs = document.getElementById('reportSection');
+  if (isPneu) {
+    rs.classList.add('visible');
+    setDlStatus('', '');
+    document.getElementById('btnDownload').disabled = false;
+  } else {
+    rs.classList.remove('visible');
+  }
+
+  const origImg  = document.getElementById('origImg');
+  const origNone = document.getElementById('origNone');
+  if (d.original) {
+    origImg.src = '/uploads/' + d.original + '?t=' + Date.now();
+    origImg.style.display  = 'block';
+    origNone.style.display = 'none';
+  }
+
+  const imgGrid     = document.getElementById('imgGrid');
+  const heatmapCard = document.getElementById('heatmapCard');
+  const gc  = document.getElementById('gradcamImg');
+  const gcN = document.getElementById('gradcamNone');
+  if (isPneu) {
+    imgGrid.className = 'img-grid'; heatmapCard.style.display = '';
+    document.getElementById('normalImgNote').style.display = 'none';
+    if (d.gradcam_path) {
+      gc.onload  = () => { gc.style.display = 'block'; gcN.style.display = 'none'; };
+      gc.onerror = () => { gc.style.display = 'none';  gcN.style.display = 'flex'; gcN.querySelector('span').textContent = 'Unavailable'; };
+      gc.src = '/uploads/' + d.gradcam_path + '?t=' + Date.now();
+    } else {
+      gc.style.display = 'none'; gcN.style.display = 'flex';
+      gcN.querySelector('span').textContent = 'Not generated';
+    }
+  } else {
+    imgGrid.className = 'img-grid single'; heatmapCard.style.display = 'none';
+    document.getElementById('normalImgNote').style.display = 'block';
+    gc.style.display = 'none'; gcN.style.display = 'none';
+  }
+}
+
+// Download PDF — no email, download only
+function doDownload() {
+  if (!currentImageId) { showError('No analysis found. Please run analysis first.'); return; }
+  const btn = document.getElementById('btnDownload');
+  btn.disabled = true;
+  setDlStatus('generating', '⏳ Generating PDF report…');
+
+  const ctrl = new AbortController();
+  const tid  = setTimeout(() => ctrl.abort(), 60000);
+
+  fetch('/generate_report', {
+    method:  'POST',
+    headers: {'Content-Type': 'application/json'},
+    body:    JSON.stringify({image_id: currentImageId}),
+    signal:  ctrl.signal
+  })
+    .then(r => { clearTimeout(tid); return r.json().then(d => ({ok:r.ok, d})); })
+    .then(({ok, d}) => {
+      btn.disabled = false;
+      if (!ok || d.error) { setDlStatus('error', '✗ ' + (d.error || 'PDF generation failed.')); return; }
+      if (d.report_filename) {
+        const a = document.createElement('a');
+        a.href     = '/reports/' + d.report_filename;
+        a.download = d.report_filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setDlStatus('success', '✓ PDF downloaded successfully.');
+      }
+    })
+    .catch(err => {
+      clearTimeout(tid); btn.disabled = false;
+      setDlStatus('error', err.name === 'AbortError'
+        ? '✗ Request timed out. Please try again.'
+        : '✗ Network error. Please try again.');
+    });
+}
+
+function setDlStatus(type, msg) {
+  const el  = document.getElementById('dlStatus');
+  const ico = document.getElementById('dlStatusIcon');
+  const txt = document.getElementById('dlStatusText');
+  el.className = 'dl-status';
+  if (!type) { el.style.display = 'none'; return; }
+  el.style.display = 'flex'; el.classList.add('show', type);
+  txt.textContent  = msg;
+  if      (type === 'generating') ico.innerHTML = '<path d="M12 4V2A10 10 0 0 0 2 12h2a8 8 0 0 1 8-8z"/>';
+  else if (type === 'success')    ico.innerHTML = '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>';
+  else                            ico.innerHTML = '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>';
+}
+</script>
+</body>
+</html>

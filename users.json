@@ -1,0 +1,16 @@
+{
+    "abalakrishna2004@gmail.com": {
+        "name": "Aggidi Balakrishna",
+        "password": "scrypt:32768:8:1$6ID43gHyaMxYI8Jv$7a5a54e2961fb62953c7b6124d3a9d4d419b8ec04b5d9633a5ef6f64ee94529b44a2d18def8a70523172344b0c6701b1930a90a69a55c3d3dcb05d66b7ea1a29",
+        "created": "2026-03-15T20:58:26.551233"
+    },
+    "abalakrishna7569@gmail.com": {
+        "name": "Aggidi Balakrishna",
+        "password": "scrypt:32768:8:1$bd88rljnwzfedZYZ$2b704361bd19617705606a359fdf86794eaf8ac8d8144ff789f6a003e77535b2dc3f0f699578a8dd62bb68bec39a4f34c400216a9b533697c2096cb48d47db4c",
+        "created": "2026-03-16T14:51:37.297697"
+    },
+    "b63499343@gmail.com": {
+        "name": "Balakrishna",
+        "password": "Abala123#"
+    }
+}
